@@ -27,7 +27,7 @@ inputs:
 
 steps:
   index_reference_genome_with_bowtie2:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/bowtie2/bowtie2_build.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/covid-assembly/bowtie2/bowtie2_build.cwl
     in:
       reference_in: sars_cov_2_reference_genome
       bt2_index_base:
@@ -35,7 +35,7 @@ steps:
     out: [ indices ]
 
   align_rnaseq_reads_to_genome:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/bowtie2/bowtie2_align.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/covid-assembly/bowtie2/bowtie2_align.cwl
     in:
       indices_file: index_reference_genome_with_bowtie2/indices
       filelist: rnaseq_left_reads
@@ -45,19 +45,19 @@ steps:
     out: [ output ]
 
   index_reference_genome_with_samtools:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/samtools/samtools_faidx.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/covid-assembly/samtools/samtools_faidx.cwl
     in:
       sequences: sars_cov_2_reference_genome
     out: [sequences_with_index]
 
   create_sequence_dictionary:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/picard/picard_CreateSequenceDictionary.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/covid-assembly/picard/picard_CreateSequenceDictionary.cwl
     in:
       REFERENCE: index_reference_genome_with_samtools/sequences_with_index
     out: [ sequences_with_dictionary ]
 
   update_read_group:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/picard/picard_AddOrReplaceReadGroups.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/covid-assembly/picard/picard_AddOrReplaceReadGroups.cwl
     in:
       INPUT: align_rnaseq_reads_to_genome/output
       OUTPUT:
@@ -77,13 +77,13 @@ steps:
     out: [ sequences_with_new_read_group ]
  
   mark_duplicates:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/picard/picard_MarkDuplicates.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/covid-assembly/picard/picard_MarkDuplicates.cwl
     in:
       bam_sorted: update_read_group/sequences_with_new_read_group
     out: [ bam_duprem ]
 
   split_alignments:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/GATK/GATK-SplitNCigarReads.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/covid-assembly/GATK/GATK-SplitNCigarReads.cwl
     in:
       reference: create_sequence_dictionary/sequences_with_dictionary
       reads: mark_duplicates/bam_duprem
@@ -94,13 +94,13 @@ steps:
     out: [ output ]
 
   index_split_alignments:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/samtools/samtools_index.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/covid-assembly/samtools/samtools_index.cwl
     in:
       bam_sorted: split_alignments/output
     out: [ bam_sorted_indexed ]
 
   call_plausible_haplotypes_and_detect_variants:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/GATK/GATK-HaplotypeCaller.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/covid-assembly/GATK/GATK-HaplotypeCaller.cwl
     in:
       reference: create_sequence_dictionary/sequences_with_dictionary
       input: index_split_alignments/bam_sorted_indexed
@@ -109,7 +109,7 @@ steps:
     out: [ output ]
 
   filer_out_low_quality_variants:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/GATK/GATK-VariantFiltration.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/covid-assembly/GATK/GATK-VariantFiltration.cwl
     in:
       reference: create_sequence_dictionary/sequences_with_dictionary
       variant: call_plausible_haplotypes_and_detect_variants/output
@@ -118,7 +118,7 @@ steps:
     out: [output]
 
   select_indels:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/GATK/GATK-SelectVariants.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/covid-assembly/GATK/GATK-SelectVariants.cwl
     in:
       reference: create_sequence_dictionary/sequences_with_dictionary
       variant: filer_out_low_quality_variants/output
@@ -129,7 +129,7 @@ steps:
     out: [ output ]
 
   select_snps:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/GATK/GATK-SelectVariants.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/covid-assembly/GATK/GATK-SelectVariants.cwl
     in:
       reference: create_sequence_dictionary/sequences_with_dictionary
       variant: filer_out_low_quality_variants/output
