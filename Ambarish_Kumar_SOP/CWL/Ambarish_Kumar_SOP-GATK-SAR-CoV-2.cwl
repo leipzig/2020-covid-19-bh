@@ -77,7 +77,7 @@ steps:
     out: [ sequences_with_new_read_group ]
  
   mark_duplicates:
-    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/picard/picard_markdup.cwl
+    run: https://raw.githubusercontent.com/common-workflow-library/bio-cwl-tools/release/picard/picard_MarkDuplicates.cwl
     in:
       bam_sorted: update_read_group/sequences_with_new_read_group
     out: [ bam_duprem ]
